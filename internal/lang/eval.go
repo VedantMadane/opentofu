@@ -344,6 +344,11 @@ func (s *Scope) evalContext(ctx context.Context, parent *hcl.EvalContext, refs [
 	hclCtx.Functions = make(map[string]function.Function)
 	hclCtx.Variables = make(map[string]cty.Value)
 
+	if s.Library != nil {
+		maps.Copy(hclCtx.Functions, s.Library.Functions)
+		maps.Copy(hclCtx.Variables, s.Library.Consts)
+	}
+
 	// The built-in functions are our starting point, but we might add extra
 	// provider-defined functions below.
 	maps.Copy(hclCtx.Functions, s.Functions())
