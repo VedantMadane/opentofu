@@ -6,7 +6,8 @@
 package jsonfunction
 
 import (
-	"github.com/zclconf/go-cty/cty"
+	"encoding/json"
+
 	"github.com/zclconf/go-cty/cty/function"
 )
 
@@ -23,7 +24,7 @@ type parameter struct {
 	IsNullable bool `json:"is_nullable,omitempty"`
 
 	// A type that any argument for this parameter must conform to.
-	Type cty.Type `json:"type"`
+	Type json.RawMessage `json:"type"`
 }
 
 func marshalParameter(p *function.Parameter) *parameter {
@@ -35,7 +36,7 @@ func marshalParameter(p *function.Parameter) *parameter {
 		Name:        p.Name,
 		Description: p.Description,
 		IsNullable:  p.AllowNull,
-		Type:        p.Type,
+		Type:        marshalType(p.Type),
 	}
 }
 
