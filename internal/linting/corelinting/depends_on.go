@@ -28,7 +28,7 @@ func RedundantDependsOn(
 	targetDeclRange hcl.Range,
 	directReferencesCb func() []*addrs.Reference,
 	dependsOnReferencesCb func() []*addrs.Reference) tfdiags.Diagnostics {
-	exec := func() tfdiags.Diagnostics {
+	exec := func(ruleID linting.RuleAddr, groupIDs ...linting.RuleAddr) tfdiags.Diagnostics {
 		dependsOnReferences := dependsOnReferencesCb()
 		if len(dependsOnReferences) == 0 {
 			return nil // There is nothing to check if the resource has no depends_on references
@@ -57,8 +57,8 @@ func RedundantDependsOn(
 				continue
 			}
 			diags = diags.Append(tfdiags.LintMessage(
-				ruleIDRedundantDependsOn,
-				[]linting.RuleAddr{GroupIDConfusing},
+				ruleID,
+				groupIDs,
 				"Redundant 'depends_on' usage",
 				fmt.Sprintf("Resource %q configures %q as 'depends_on'. The configured dependency is already automatically inferred which makes this particular 'depends_on' reference redundant.", targetRes.String(), refKey),
 				new(tfdiags.SourceRangeFromHCL(dependsOnRef.SourceRange.ToHCL())),
