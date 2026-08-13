@@ -13,7 +13,6 @@ import (
 	"github.com/zclconf/go-cty/cty/function"
 
 	"github.com/opentofu/opentofu/internal/addrs"
-	"github.com/opentofu/opentofu/internal/lang"
 	"github.com/opentofu/opentofu/internal/tfdiags"
 )
 
@@ -128,17 +127,9 @@ func marshalFunction(f function.Function) (*FunctionSignature, error) {
 // marshalType returns the JSON representation of the given type.
 //
 // This only supports the subset of cty.Type values that we use in the
-// parameters and return values of built-in functions, and will panic if
+// parameters and return values of built-in functions, and could panic if
 // given something unexpected.
 func marshalType(ty cty.Type) json.RawMessage {
-	// The capsule type we use to represent a type conversion constraint needs
-	// special handling because it has no built-in JSON serialization.
-	// This is currently handled only as a top-level type because that's the
-	// only way we use it in practice. This capsule type may not appear as
-	// a nested part of a complex type.
-	if ty == lang.TypeConversionType {
-		return []byte(`"type"`)
-	}
 	ret, err := ty.MarshalJSON()
 	if err != nil {
 		panic(err.Error())
@@ -199,7 +190,13 @@ func marshalConvert(convert function.Function) *FunctionSignature {
 				Name:        convert.Params()[1].Name,
 				Description: convert.Params()[1].Description,
 				IsNullable:  convert.Params()[1].AllowNull,
-				Type:        marshalType(lang.TypeConversionType),
+				// This parameter has a special custom-decoded type that
+				// interprets the syntax as a type expression instead of a
+				// value expression, which we represent as "type" when
+				// describing it as JSON. We specify that directly here
+				// because each instantiation of the real "convert" function
+				// has a distinct cty.Type in this position.
+				Type: []byte(`"type"`),
 			},
 		},
 	}
